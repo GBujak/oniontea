@@ -1,0 +1,16 @@
+[package]
+name = "oniontea"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.103"
+arti-client = { version = "0.44.0", features = ["onion-service-client", "onion-service-service", "anyhow", "native-tls"] }
+crossterm = "0.29.0"
+serde = { version = "1.0.228", features = ["derive"] }
+tokio = { version = "1.52.3", features = ["full"] }
+tower = "0.5.3"
+tokio-util = "0.7.18"
+hyper = { version = "1.10.1", features = ["client", "http1"] }
+hyper-util = { version = "0.1.20", features = ["tokio"] }
+http-body-util = "0.1.3"
