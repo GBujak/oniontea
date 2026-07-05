@@ -1,42 +1,44 @@
+pub mod tor_requests;
+
+use crate::tor_requests::tor_request_builder_traits::{HeaderOrBody, Method};
+use crate::tor_requests::TorRequests;
 use anyhow::Result;
-use arti_client::TorClient;
-use http_body_util::{BodyExt, Empty};
-use hyper::body::Bytes;
-use hyper::client::conn::http1;
-use hyper::{header, Request};
-use hyper_util::rt::TokioIo;
+use http_body_util::BodyExt;
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+struct Post {
+    pub title: String,
+    pub body: String,
+    pub id: i64,
+    pub user_id: i64,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let tor_client = TorClient::create_bootstrapped(Default::default()).await?;
+    let tor_requests = TorRequests::new_expensive().await?;
     println!("Tor client set up!");
 
     for _ in 0..10 {
-        let stream = tor_client.connect(("example.com", 80)).await?;
+        let response = tor_requests
+            .connect("example.com", 80)
+            .await?
+            .get("/")
+            .empty_body()?
+            .send()
+            .await?;
 
-        // Adapt the Tokio IO to Hyper
-        let io = TokioIo::new(stream);
-
-        // Create an HTTP/1 connection
-        let (mut sender, conn) = http1::handshake(io).await?;
-
-        // Drive the connection in the background
-        tokio::spawn(async move {
-            let _ = conn.await;
-        });
-
-        // Send requests normally
-        let req = Request::builder()
-            .method("GET")
-            .uri("/")
-            .header(header::HOST, "example.com")
-            .header(header::USER_AGENT, "my-app")
-            .body(Empty::<Bytes>::new())?;
-
-        let response = sender.send_request(req).await?;
         println!(
-            "{}",
-            String::from_utf8(response.into_body().collect().await?.to_bytes().to_vec())?
+            "{:?}",
+            String::from_utf8(
+                response
+                    .into_response()
+                    .into_body()
+                    .collect()
+                    .await?
+                    .to_bytes()
+                    .to_vec()
+            )?
         );
     }
 

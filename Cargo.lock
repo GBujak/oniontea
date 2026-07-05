@@ -2321,13 +2321,16 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arti-client",
+ "bytes",
  "crossterm",
  "http-body-util",
  "hyper",
  "hyper-util",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-util",
+ "tor-rtcompat",
  "tower",
 ]
 
