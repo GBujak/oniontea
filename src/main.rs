@@ -4,15 +4,10 @@ use crate::tor_requests::tor_request_builder_traits::{HeaderOrBody, Method};
 use crate::tor_requests::TorRequests;
 use anyhow::Result;
 use http_body_util::BodyExt;
-use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
-struct Post {
-    pub title: String,
-    pub body: String,
-    pub id: i64,
-    pub user_id: i64,
-}
+const APP_QUALIFIER: &'static str = "com";
+const APP_ORGANIZATION: &'static str = "gbujak";
+const APP_NAME: &'static str = "oniontea";
 
 #[tokio::main]
 async fn main() -> Result<()> {

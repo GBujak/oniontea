@@ -1,9 +1,11 @@
 use crate::tor_requests::tor_request_builder_traits::Method;
+use crate::{APP_NAME, APP_ORGANIZATION, APP_QUALIFIER};
 use anyhow::Result;
-use arti_client::{IntoTorAddr, TorClient};
+use arti_client::config::TorClientConfigBuilder;
+use arti_client::TorClient;
 use bytes::BytesMut;
 use http_body_util::{BodyExt, Full};
-use hyper::body::{Body, Bytes, Incoming};
+use hyper::body::{Bytes, Incoming};
 use hyper::client::conn::http1;
 use hyper::client::conn::http1::SendRequest;
 use hyper::header::HOST;
@@ -11,8 +13,6 @@ use hyper::http::request::Builder as HyperBuilder;
 use hyper::{Request, Response};
 use hyper_util::rt::TokioIo;
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
@@ -23,8 +23,20 @@ pub struct TorRequests {
 
 impl TorRequests {
     pub async fn new_expensive() -> Result<Self> {
+        let app_cache_dir =
+            directories::ProjectDirs::from(APP_QUALIFIER, APP_ORGANIZATION, APP_NAME)
+                .expect("To have a determinable system config directory")
+                .cache_dir()
+                .to_owned();
+
+        let arti_state_dir = app_cache_dir.clone().join("arti-client-state");
+        let arti_cache_dir = app_cache_dir.clone().join("arti-client-cache");
+
         Ok(Self {
-            tor_client: TorClient::create_bootstrapped(Default::default()).await?,
+            tor_client: TorClient::create_bootstrapped(
+                TorClientConfigBuilder::from_directories(arti_state_dir, arti_cache_dir).build()?,
+            )
+            .await?,
         })
     }
 
